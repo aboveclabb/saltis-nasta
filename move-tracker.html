@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flytten — Claes & Elsa</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button, input, select, textarea { font-family: inherit; font-size: inherit; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #EEECE6;
+  color: #2C2C2A;
+  font-size: 16px;
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Setup banner ── */
+.setup-banner {
+  background: #FAEEDA; border-bottom: 1px solid #FAC775;
+  padding: 12px 16px; font-size: 13px; color: #633806;
+  display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+}
+.setup-banner code { background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 4px; }
+
+/* ── Countdown banner ── */
+.countdown-banner {
+  background: #1D1D1B;
+  padding: 14px 16px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.countdown-number {
+  font-size: 36px; font-weight: 900; color: white; line-height: 1;
+  letter-spacing: -1px;
+}
+.countdown-label {
+  font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.5);
+  text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.3;
+}
+.countdown-label strong { display: block; font-size: 14px; color: white; }
+
+/* ── Header ── */
+.header {
+  background: white;
+  border-bottom: 1px solid #E0DDD6;
+  padding: 14px 16px 0;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-inner {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 12px;
+  padding-bottom: 12px; flex-wrap: wrap;
+}
+.header-title { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.header-sub   { font-size: 12px; color: #888780; margin-top: 2px; }
+
+.header-right { display: flex; align-items: center; gap: 14px; }
+
+.sync-pill {
+  font-size: 12px; padding: 4px 10px; border-radius: 20px;
+  display: flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.sync-loading { background: #F1EFE8; color: #888780; }
+.sync-pending { background: #FAEEDA; color: #854F0B; }
+.sync-saving  { background: #FAEEDA; color: #854F0B; }
+.sync-synced  { background: #E1F5EE; color: #0F6E56; }
+.sync-offline { background: #F1EFE8; color: #5F5E5A; }
+.sync-error   { background: #FCEBEB; color: #A32D2D; }
+.sync-local   { background: #F1EFE8; color: #888780; }
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+.stats { display: flex; gap: 14px; }
+.stat { text-align: center; }
+.stat-n { font-size: 22px; font-weight: 800; line-height: 1; }
+.stat-l { font-size: 10px; color: #888780; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.progress-track { height: 4px; background: #E0DDD6; margin: 0 -16px; }
+.progress-fill  { height: 100%; background: linear-gradient(90deg, #1D9E75, #378ADD); transition: width 0.4s; border-radius: 0 2px 2px 0; }
+
+/* ── Filters ── */
+.filters-bar {
+  background: white; border-bottom: 1px solid #E0DDD6;
+  padding: 10px 16px; position: sticky; top: 80px; z-index: 99;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filters-bar::-webkit-scrollbar { display: none; }
+.filters-inner {
+  display: flex; gap: 5px; align-items: center; white-space: nowrap;
+  width: max-content;
+}
+.filter-label {
+  font-size: 10px; color: #B4B2A9; text-transform: uppercase;
+  letter-spacing: 0.05em; margin-right: 2px; flex-shrink: 0;
+}
+.filter-btn {
+  font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px;
+  border: 1.5px solid #D3D1C7; background: white; color: #5F5E5A;
+  cursor: pointer; transition: all 0.12s; flex-shrink: 0; min-height: 34px;
+}
+.filter-btn:hover { border-color: #888780; color: #2C2C2A; }
+.filter-btn.active { background: #2C2C2A; color: white; border-color: #2C2C2A; }
+.filter-btn[data-f="status"][data-v="todo"].active     { background: #E8433A; border-color: #E8433A; }
+.filter-btn[data-f="status"][data-v="progress"].active { background: #EF9F27; border-color: #EF9F27; }
+.filter-btn[data-f="status"][data-v="done"].active     { background: #1D9E75; border-color: #1D9E75; }
+.filter-divider { width: 1px; height: 18px; background: #E0DDD6; margin: 0 3px; flex-shrink: 0; }
+
+/* ── Main ── */
+.main { padding: 20px 16px 110px; max-width: 800px; margin: 0 auto; }
+
+/* ── Phase section ── */
+.phase-section { margin-bottom: 28px; }
+.phase-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.phase-chip {
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.08em; padding: 6px 14px; border-radius: 20px; color: white;
+}
+.phase-count { font-size: 13px; color: #888780; font-weight: 700; }
+
+.p-prep   { background: #1D9E75; }
+.p-out    { background: #EF9F27; }
+.p-in     { background: #378ADD; }
+.p-fixes  { background: #7F77DD; }
+.p-settle { background: #7A8FA6; }
+
+/* ── Task card (Full Bleed) ── */
+.task-list { display: flex; flex-direction: column; gap: 8px; }
+
+.task-card {
+  border-radius: 16px;
+  border: none;
+  display: flex; align-items: stretch;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+  overflow: hidden;
+  min-height: 72px;
+  -webkit-user-select: none; user-select: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.13);
+}
+.task-card:active { transform: scale(0.97); }
+
+/* Full-bleed phase backgrounds */
+.card-prep   { background: #1D9E75; }
+.card-out    { background: #EF9F27; }
+.card-in     { background: #378ADD; }
+.card-fixes  { background: #7F77DD; }
+.card-settle { background: #7A8FA6; }
+
+/* Done cards: faded */
+.card-done { opacity: 0.45; }
+
+/* Left bar hidden in full-bleed mode */
+.card-bar { display: none; }
+
+.card-inner {
+  flex: 1; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px; min-width: 0;
+}
+
+/* Status button — white-based on colored background */
+.s-btn {
+  width: 34px; height: 34px; flex-shrink: 0;
+  border-radius: 50%; border: 2.5px solid;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: transform 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.s-btn:active { transform: scale(0.85); }
+.s-todo     { border-color: rgba(255,255,255,0.55); background: rgba(255,255,255,0.18); color: transparent; }
+.s-progress { border-color: white; background: rgba(255,255,255,0.3); color: white; }
+.s-done     { border-color: white; background: white; color: #1D9E75; }
+
+.s-check { display: none; }
+.s-done .s-check, .s-progress .s-check { display: block; }
+
+.card-content { flex: 1; min-width: 0; }
+.task-name {
+  font-size: 16px; font-weight: 700; color: white; line-height: 1.3;
+  display: block; margin-bottom: 6px;
+  word-break: break-word;
+}
+.card-done .task-name { text-decoration: line-through; color: rgba(255,255,255,0.7); }
+
+.card-tags { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+
+.person-badge {
+  font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 700; white-space: nowrap;
+  background: rgba(255,255,255,0.22); color: white;
+}
+.pb-claes { background: rgba(255,255,255,0.22); color: white; }
+.pb-elsa  { background: rgba(0,0,0,0.15); color: rgba(255,255,255,0.9); }
+.pb-both  { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.85); }
+
+.status-tag {
+  font-size: 11px; padding: 3px 9px; border-radius: 20px; white-space: nowrap; font-weight: 700;
+}
+.st-todo     { background: #E8433A; color: white; }
+.st-progress { background: #EF9F27; color: white; }
+.st-done     { background: #1D9E75; color: white; }
+
+.card-arrow {
+  color: rgba(255,255,255,0.45); font-size: 18px; flex-shrink: 0; padding: 0 2px;
+  align-self: center;
+}
+
+/* ── Add row ── */
+.add-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border: 2px dashed #C0BDB5; border-radius: 16px;
+  cursor: pointer; color: #888780; font-size: 14px; font-weight: 600;
+  margin-top: 2px; transition: all 0.12s; background: transparent;
+  width: 100%; text-align: left; min-height: 52px;
+}
+.add-row:hover, .add-row:active { border-color: #888780; color: #5F5E5A; background: rgba(255,255,255,0.5); }
+
+/* ── FAB ── */
+.fab {
+  position: fixed; bottom: 24px; right: 16px;
+  background: #1D9E75; color: white; border: none; border-radius: 28px;
+  padding: 15px 26px; font-size: 15px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 20px rgba(29,158,117,0.4); z-index: 200;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab:active { transform: scale(0.96); }
+
+/* ── Overlay ── */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(44,44,42,0.5); z-index: 300;
+  align-items: flex-end; justify-content: center;
+  padding: 0;
+}
+.overlay.open { display: flex; }
+
+/* Modal as bottom sheet */
+.modal {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 600px;
+  border: 1px solid #E0DDD6;
+  border-bottom: none;
+  max-height: 92vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Pull handle */
+.modal::before {
+  content: '';
+  display: block;
+  width: 40px; height: 4px;
+  background: #E0DDD6; border-radius: 2px;
+  margin: 12px auto 0;
+}
+
+.modal-head {
+  padding: 16px 20px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid #F1EFE8;
+  position: sticky; top: 0; background: white; z-index: 1;
+}
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-close {
+  background: #F1EFE8; border: none; cursor: pointer;
+  color: #888780; font-size: 18px; width: 32px; height: 32px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+
+.modal-foot {
+  padding: 16px 20px 28px;
+  border-top: 1px solid #F1EFE8;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  position: sticky; bottom: 0; background: white;
+}
+
+/* ── Form ── */
+.field-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #888780; margin-bottom: 8px; display: block;
+}
+.field-input, .field-select {
+  width: 100%; padding: 13px 14px;
+  border: 1.5px solid #D3D1C7; border-radius: 10px;
+  font-size: 15px; color: #2C2C2A; background: white;
+  outline: none; transition: border-color 0.12s; appearance: none;
+}
+.field-input:focus, .field-select:focus { border-color: #2C2C2A; }
+.field-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888780' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  padding-right: 36px; cursor: pointer;
+}
+
+/* ── Toggle group ── */
+.toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.toggle-btn {
+  font-size: 14px; padding: 10px 18px; border-radius: 10px;
+  border: 1.5px solid #D3D1C7; background: white; color: #5F5E5A;
+  cursor: pointer; transition: all 0.12s; flex: 1; min-width: 0;
+  text-align: center; min-height: 44px;
+}
+.toggle-btn:active { transform: scale(0.96); }
+.toggle-btn.sel        { background: #2C2C2A;  color: white;  border-color: #2C2C2A; font-weight: 600; }
+.toggle-btn.sel-green  { background: #1D9E75;  color: white;  border-color: #1D9E75; font-weight: 600; }
+.toggle-btn.sel-amber  { background: #EF9F27;  color: white;  border-color: #EF9F27; font-weight: 600; }
+.toggle-btn.sel-red    { background: #E8433A;  color: white;  border-color: #E8433A; font-weight: 600; }
+.toggle-btn.sel-claes  { background: #E6F1FB;  color: #185FA5; border-color: #B5D4F4; font-weight: 700; }
+.toggle-btn.sel-elsa   { background: #FBEAF0;  color: #993556; border-color: #F4C0D1; font-weight: 700; }
+.toggle-btn.sel-both   { background: #F1EFE8;  color: #444441; border-color: #D3D1C7; font-weight: 700; }
+
+/* ── Buttons ── */
+.btn {
+  padding: 13px 20px; border-radius: 10px; font-size: 15px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid #D3D1C7; background: white; color: #5F5E5A;
+  transition: all 0.12s; min-height: 48px;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: #2C2C2A; color: white; border-color: #2C2C2A; flex: 1; }
+.btn-cancel  { min-width: 80px; }
+.btn-danger  { color: #A32D2D; border-color: #F7C1C1; background: white; }
+.btn-row { display: flex; gap: 8px; flex: 1; }
+
+.empty-msg { color: #888780; font-size: 14px; padding: 10px 2px; }
+
+.spin {
+  display: inline-block; width: 8px; height: 8px;
+  border: 1.5px solid #EF9F27; border-top-color: transparent;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Desktop enhancements ── */
+@media (min-width: 600px) {
+  .header { padding: 16px 32px 0; }
+  .filters-bar { padding: 10px 32px; top: 82px; }
+  .main { padding: 24px 32px 100px; }
+  .fab { right: 32px; bottom: 32px; }
+
+  .overlay { align-items: center; padding: 16px; }
+  .modal {
+    border-radius: 16px; max-width: 480px; border-bottom: 1px solid #E0DDD6;
+    max-height: 90vh;
+  }
+  .modal::before { display: none; }
+
+  .task-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.18); transform: translateY(-1px); }
+}
+</style>
+</head>
+<body>
+
+<!-- Countdown banner -->
+<div class="countdown-banner">
+  <div class="countdown-number" id="countdown-days">—</div>
+  <div class="countdown-label">dagar kvar<strong>till inflytt 3 aug</strong></div>
+</div>
+
+<!-- Setup banner -->
+<div class="setup-banner" id="setup-banner" style="display:none">
+  <div>
+    <strong>⚠ Synk ej konfigurerat.</strong> Följ instruktionerna i
+    <code>google-apps-script.js</code> och klistra in URL:en i denna fil vid
+    <code>SCRIPT_URL</code>. Tills dess sparas uppgifter enbart i denna webbläsare.
+  </div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div>
+      <div class="header-title" style="font-size:28px;">Saltis nästa!</div>
+    </div>
+    <div class="header-right">
+      <div id="sync-pill" class="sync-pill sync-loading">
+        <span class="sync-dot" id="sync-dot" style="background:#B4B2A9"></span>
+        <span id="sync-text">Laddar…</span>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-n" id="stat-done">0</div>
+          <div class="stat-l">Klara</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n" id="stat-left">0</div>
+          <div class="stat-l">Kvar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="prog" style="width:0%"></div>
+  </div>
+</header>
+
+<!-- Filters -->
+<div class="filters-bar">
+  <div class="filters-inner">
+    <span class="filter-label">Fas</span>
+    <button class="filter-btn active" data-f="phase" data-v="all">Alla</button>
+    <button class="filter-btn" data-f="phase" data-v="prep">Förberedelser</button>
+    <button class="filter-btn" data-f="phase" data-v="out">Utflytt</button>
+    <button class="filter-btn" data-f="phase" data-v="in">Inflytt</button>
+    <button class="filter-btn" data-f="phase" data-v="fixes">Initiala fixar</button>
+    <button class="filter-btn" data-f="phase" data-v="settle">Bosätta sig</button>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Person</span>
+    <button class="filter-btn active" data-f="person" data-v="all">Alla</button>
+    <button class="filter-btn" data-f="person" data-v="Claes">Claes</button>
+    <button class="filter-btn" data-f="person" data-v="Elsa">Elsa</button>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Status</span>
+    <button class="filter-btn active" data-f="status" data-v="all">Alla</button>
+    <button class="filter-btn" data-f="status" data-v="todo">Att göra</button>
+    <button class="filter-btn" data-f="status" data-v="progress">Pågår</button>
+    <button class="filter-btn" data-f="status" data-v="done">Klart</button>
+  </div>
+</div>
+
+<!-- Main -->
+<main class="main" id="main"></main>
+
+<!-- FAB -->
+<button class="fab" onclick="openAddModal()">
+  <span style="font-size:20px;line-height:1">+</span> Lägg till
+</button>
+
+<!-- Add modal -->
+<div class="overlay" id="add-overlay" onclick="overlayClick(event,'add-overlay')">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Ny uppgift</span>
+      <button class="modal-close" onclick="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label class="field-label">Uppgift</label>
+        <input class="field-input" id="add-name" placeholder="t.ex. Meddela banken ny adress" />
+      </div>
+      <div>
+        <label class="field-label">Tilldelad</label>
+        <div class="toggle-group" id="add-person-group">
+          <button class="toggle-btn sel-claes sel" data-v="Claes" onclick="pickToggle('add-person-group',this,'person')">Claes</button>
+          <button class="toggle-btn" data-v="Elsa"  onclick="pickToggle('add-person-group',this,'person')">Elsa</button>
+          <button class="toggle-btn" data-v="Båda"  onclick="pickToggle('add-person-group',this,'person')">Båda</button>
+        </div>
+      </div>
+      <div>
+        <label class="field-label">Fas</label>
+        <select class="field-select" id="add-phase">
+          <option value="prep">Förberedelser</option>
+          <option value="out">Utflytt</option>
+          <option value="in">Inflytt</option>
+          <option value="fixes">Initiala fixar</option>
+          <option value="settle">Bosätta sig</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">Status</label>
+        <div class="toggle-group" id="add-status-group">
+          <button class="toggle-btn sel-red sel" data-v="todo"     onclick="pickToggle('add-status-group',this,'status')">Att göra</button>
+          <button class="toggle-btn"             data-v="progress" onclick="pickToggle('add-status-group',this,'status')">Pågår</button>
+          <button class="toggle-btn"             data-v="done"     onclick="pickToggle('add-status-group',this,'status')">Klart</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span></span>
+      <div class="btn-row">
+        <button class="btn btn-cancel" onclick="closeModals()">Avbryt</button>
+        <button class="btn btn-primary" onclick="submitAdd()">Lägg till</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="overlay" id="edit-overlay" onclick="overlayClick(event,'edit-overlay')">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Redigera uppgift</span>
+      <button class="modal-close" onclick="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label class="field-label">Uppgift</label>
+        <input class="field-input" id="edit-name" />
+      </div>
+      <div>
+        <label class="field-label">Tilldelad</label>
+        <div class="toggle-group" id="edit-person-group">
+          <button class="toggle-btn" data-v="Claes" onclick="pickToggle('edit-person-group',this,'person')">Claes</button>
+          <button class="toggle-btn" data-v="Elsa"  onclick="pickToggle('edit-person-group',this,'person')">Elsa</button>
+          <button class="toggle-btn" data-v="Båda"  onclick="pickToggle('edit-person-group',this,'person')">Båda</button>
+        </div>
+      </div>
+      <div>
+        <label class="field-label">Fas</label>
+        <select class="field-select" id="edit-phase">
+          <option value="prep">Förberedelser</option>
+          <option value="out">Utflytt</option>
+          <option value="in">Inflytt</option>
+          <option value="fixes">Initiala fixar</option>
+          <option value="settle">Bosätta sig</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">Status</label>
+        <div class="toggle-group" id="edit-status-group">
+          <button class="toggle-btn" data-v="todo"     onclick="pickToggle('edit-status-group',this,'status')">Att göra</button>
+          <button class="toggle-btn" data-v="progress" onclick="pickToggle('edit-status-group',this,'status')">Pågår</button>
+          <button class="toggle-btn" data-v="done"     onclick="pickToggle('edit-status-group',this,'status')">Klart</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" onclick="deleteFromModal()">Ta bort</button>
+      <div class="btn-row">
+        <button class="btn btn-cancel" onclick="closeModals()">Avbryt</button>
+        <button class="btn btn-primary" onclick="submitEdit()">Spara</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   KONFIGURATION
+   1. Följ instruktionerna i google-apps-script.js
+   2. Klistra in din webb-app-URL nedan
+   3. Sätt samma SECRET som i Apps Script-filen
+   ══════════════════════════════════════════════ */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxN51f9gAgiWz6fgd_mtDElWISLUUg1YXfnaAsmymhptRA6iUepFG05zOB9KR5lMdmYQ/exec';
+const SECRET     = 'the-move-2025';
+
+/* ── Konstanter ── */
+const STORAGE_KEY = 'flytten-v1';
+
+const PHASES = [
+  { key:'prep',   label:'Förberedelser', chip:'p-prep',   bar:'bar-prep'   },
+  { key:'out',    label:'Utflytt',        chip:'p-out',    bar:'bar-out'    },
+  { key:'in',     label:'Inflytt',        chip:'p-in',     bar:'bar-in'     },
+  { key:'fixes',  label:'Initiala fixar', chip:'p-fixes',  bar:'bar-fixes'  },
+  { key:'settle', label:'Bosätta sig',    chip:'p-settle', bar:'bar-settle' },
+];
+
+const DEFAULT_TASKS = [
+  // Förberedelser
+  { name:'Boka flyttfirma',                                          person:'Claes', phase:'prep',   status:'todo' },
+  { name:'Bekräfta datum och detaljer med flyttfirman',              person:'Claes', phase:'prep',   status:'todo' },
+  { name:'Ordna parkering för flyttbil vid båda adresserna',         person:'Claes', phase:'prep',   status:'todo' },
+  { name:'Bekräfta tillträdesdatum med mäklare — nya huset (3 aug)', person:'Claes', phase:'prep',   status:'todo' },
+  { name:'Bekräfta tillträdesdatum med mäklare — gamla huset (6 aug)', person:'Claes', phase:'prep', status:'todo' },
+  { name:'Kontakta banken om bolån — lösa gammalt och teckna nytt',  person:'Claes', phase:'prep',   status:'todo' },
+  { name:'Teckna hemförsäkring för nya huset från tillträdesdatum',  person:'Elsa',  phase:'prep',   status:'todo' },
+  { name:'Folkbokföra er på ny adress (Skatteverket)',               person:'Båda',  phase:'prep',   status:'todo' },
+  { name:'Meddela arbetsgivare ny adress',                           person:'Claes', phase:'prep',   status:'todo' },
+  { name:'Meddela arbetsgivare ny adress',                           person:'Elsa',  phase:'prep',   status:'todo' },
+  { name:'Eftersändning av post (Postnord)',                         person:'Claes', phase:'prep',   status:'todo' },
+  { name:'Uppdatera adress på prenumerationer och tjänster',         person:'Elsa',  phase:'prep',   status:'todo' },
+  { name:'Säg upp bredbandsabonnemang på gamla adressen',            person:'Claes', phase:'prep',   status:'todo' },
+  { name:'Teckna bredband på nya adressen',                          person:'Claes', phase:'prep',   status:'todo' },
+  { name:'Säg upp elavtal på gamla adressen — teckna nytt',          person:'Claes', phase:'prep',   status:'todo' },
+  { name:'Meddela vänner och familj ny adress',                      person:'Elsa',  phase:'prep',   status:'todo' },
+  { name:'Beställ flyttkartonger och packningsmaterial',             person:'Elsa',  phase:'prep',   status:'todo' },
+  { name:'Sortera — sälj eller skänk saker',                         person:'Båda',  phase:'prep',   status:'todo' },
+  { name:'Börja packa icke-nödvändiga saker',                        person:'Båda',  phase:'prep',   status:'todo' },
+  { name:'Packa och märk alla kartonger per rum',                    person:'Båda',  phase:'prep',   status:'todo' },
+  { name:'Montera isär stora möbler',                                person:'Claes', phase:'prep',   status:'todo' },
+  // Utflytt
+  { name:'Ta mätaravläsningar i gamla huset',                        person:'Claes', phase:'out',    status:'todo' },
+  { name:'Fotografera gamla huset för dokumentation inför överlåtelse', person:'Elsa', phase:'out',  status:'todo' },
+  { name:'Tina av och rengör kylskåp',                              person:'Elsa',  phase:'out',    status:'todo' },
+  { name:'Kontrollera att alla skåp, förråd och garage är tomma',   person:'Elsa',  phase:'out',    status:'todo' },
+  { name:'Kolla vind och källare',                                   person:'Claes', phase:'out',    status:'todo' },
+  { name:'Åtgärda eventuella anmärkningar från besiktningen',        person:'Claes', phase:'out',    status:'todo' },
+  { name:'Slutstäda gamla huset',                                    person:'Båda',  phase:'out',    status:'todo' },
+  { name:'Genomgång och överlämning med köparen',                    person:'Claes', phase:'out',    status:'todo' },
+  { name:'Överlämna nycklar till köparen vid tillträde (6 aug)',     person:'Claes', phase:'out',    status:'todo' },
+  { name:'Säg upp hemförsäkring på gamla huset',                     person:'Elsa',  phase:'out',    status:'todo' },
+  // Inflytt
+  { name:'Ta emot nycklar vid tillträde nya huset (3 aug)',          person:'Claes', phase:'in',     status:'todo' },
+  { name:'Ta mätaravläsningar i nya huset',                         person:'Claes', phase:'in',     status:'todo' },
+  { name:'Fotografera nya huset vid tillträde',                      person:'Elsa',  phase:'in',     status:'todo' },
+  { name:'Kontrollera att utlovade åtgärder är genomförda av säljaren', person:'Claes', phase:'in',  status:'todo' },
+  { name:'Dirigera möblerna på plats med flyttfirman',               person:'Båda',  phase:'in',     status:'todo' },
+  { name:'Packa upp nödvändighetskartongen (sängkläder, kök)',       person:'Elsa',  phase:'in',     status:'todo' },
+  { name:'Ställ i ordning säng och sovrum',                          person:'Elsa',  phase:'in',     status:'todo' },
+  { name:'Ställ i ordning köket',                                    person:'Elsa',  phase:'in',     status:'todo' },
+  { name:'Anslut tvättmaskin',                                       person:'Claes', phase:'in',     status:'todo' },
+  { name:'Montera möbler',                                           person:'Claes', phase:'in',     status:'todo' },
+  { name:'Packa upp och organisera resterande kartonger',            person:'Båda',  phase:'in',     status:'todo' },
+  // Initiala fixar
+  { name:'Häng upp gardiner och persienner',                         person:'Båda',  phase:'fixes',  status:'todo' },
+  { name:'Sätt upp hyllor och tavlor',                               person:'Claes', phase:'fixes',  status:'todo' },
+  { name:'Montera rök- och CO-larm',                                 person:'Claes', phase:'fixes',  status:'todo' },
+  { name:'Kontrollera alla lås och fönsterstängare',                 person:'Claes', phase:'fixes',  status:'todo' },
+  { name:'Måla och åtgärda småfel',                                  person:'Claes', phase:'fixes',  status:'todo' },
+  { name:'Organisera förvaring — garderober och garage',             person:'Båda',  phase:'fixes',  status:'todo' },
+  // Bosätta sig
+  { name:'Deklarera kapitalvinst på sålda huset (inkomstdeklaration)', person:'Claes', phase:'settle', status:'todo' },
+  { name:'Utforska området',                                         person:'Båda',  phase:'settle', status:'todo' },
+  { name:'Hitta närmaste matbutik och apotek',                       person:'Elsa',  phase:'settle', status:'todo' },
+  { name:'Lista er hos husläkare och tandläkare',                    person:'Elsa',  phase:'settle', status:'todo' },
+  { name:'Uppdatera körkort och ID-kort med ny adress',              person:'Claes', phase:'settle', status:'todo' },
+  { name:'Inred och personalisera hemmet',                           person:'Båda',  phase:'settle', status:'todo' },
+  { name:'Iordningställ trädgård och uteyta',                        person:'Claes', phase:'settle', status:'todo' },
+  { name:'Hälsa på grannarna',                                       person:'Båda',  phase:'settle', status:'todo' },
+];
+
+/* ── State ── */
+let tasks   = [];
+let nextId  = 0;
+let fPhase  = 'all', fPerson = 'all', fStatus = 'all';
+let editingId = null, syncTimer = null;
+
+/* ── Init ── */
+(async function init() {
+  // Always show data immediately from local storage / defaults
+  loadLocal() || loadDefaults();
+  if (isUnconfigured()) {
+    document.getElementById('setup-banner').style.display = 'flex';
+    setSyncStatus('local');
+    render();
+    return;
+  }
+  render(); // show local data right away
+  // Then sync with cloud in background
+  setSyncStatus('loading');
+  const ok = await loadCloud();
+  if (!ok) setSyncStatus('offline');
+  render(); // re-render with any updated cloud data
+})();
+
+/* ── Sync status ── */
+const SS = {
+  loading: { cls:'sync-loading', dot:'#B4B2A9', text:'Laddar…',           spin:false },
+  pending: { cls:'sync-pending', dot:'#EF9F27', text:'Osparad…',          spin:false },
+  saving:  { cls:'sync-saving',  dot:'#EF9F27', text:'Sparar…',           spin:true  },
+  synced:  { cls:'sync-synced',  dot:'#1D9E75', text:'Synkroniserad',     spin:false },
+  offline: { cls:'sync-offline', dot:'#B4B2A9', text:'Offline — sparad lokalt', spin:false },
+  error:   { cls:'sync-error',   dot:'#E24B4A', text:'Synkfel',           spin:false },
+  local:   { cls:'sync-local',   dot:'#D3D1C7', text:'Sparad lokalt',     spin:false },
+};
+function setSyncStatus(s) {
+  const c = SS[s] || SS.local;
+  document.getElementById('sync-pill').className = 'sync-pill ' + c.cls;
+  document.getElementById('sync-dot').style.background = c.dot;
+  document.getElementById('sync-text').innerHTML = c.spin
+    ? `<span class="spin"></span> ${c.text}` : c.text;
+}
+
+/* ── Storage ── */
+function loadLocal() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (!Array.isArray(d) || d.length === 0) return false;
+    tasks = d; nextId = Math.max(...tasks.map(t => t.id), -1) + 1;
+    return true;
+  } catch(e) { return false; }
+}
+function loadDefaults() {
+  tasks = DEFAULT_TASKS.map((t, i) => ({ ...t, id: i }));
+  nextId = tasks.length;
+}
+function saveLocal() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
+function isUnconfigured() { return !SCRIPT_URL || SCRIPT_URL.includes('YOUR_'); }
+
+/* ── Cloud ── */
+async function loadCloud() {
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=load&secret=${encodeURIComponent(SECRET)}`,
+      { signal: AbortSignal.timeout(6000) });
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      if (data.length > 0) {
+        tasks = data; nextId = Math.max(...tasks.map(t => t.id), -1) + 1;
+        saveLocal(); setSyncStatus('synced'); return true;
+      }
+      // Cloud is empty — push local data up
+      saveLocal(); saveCloud(); setSyncStatus('synced'); return true;
+    }
+  } catch(e) {}
+  return false;
+}
+function isFileProtocol() { return location.protocol === 'file:'; }
+
+async function saveCloud() {
+  if (isFileProtocol()) { setSyncStatus('local'); return false; }
+  setSyncStatus('saving');
+  try {
+    const res  = await fetch(SCRIPT_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({ secret: SECRET, tasks }),
+    });
+    const data = await res.json();
+    if (data && data.ok) { setSyncStatus('synced'); return true; }
+  } catch(e) {}
+  setSyncStatus('error'); return false;
+}
+function onChanged() {
+  saveLocal();
+  if (isUnconfigured() || isFileProtocol()) { setSyncStatus('local'); return; }
+  clearTimeout(syncTimer); setSyncStatus('pending');
+  syncTimer = setTimeout(saveCloud, 900);
+}
+
+/* ── Render ── */
+function render() {
+  const total = tasks.length;
+  const done  = tasks.filter(t => t.status === 'done').length;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-left').textContent = total - done;
+  document.getElementById('prog').style.width = total
+    ? Math.round(done / total * 100) + '%' : '0%';
+
+  const visible = tasks.filter(t =>
+    (fPhase  === 'all' || t.phase  === fPhase) &&
+    (fPerson === 'all' || t.person === fPerson) &&
+    (fStatus === 'all' || t.status === fStatus)
+  );
+
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  PHASES.forEach(ph => {
+    if (fPhase !== 'all' && fPhase !== ph.key) return;
+    const phTasks = visible.filter(t => t.phase === ph.key);
+    const phTotal = tasks.filter(t => t.phase === ph.key).length;
+    const phDone  = tasks.filter(t => t.phase === ph.key && t.status === 'done').length;
+
+    const sec  = document.createElement('div');
+    sec.className = 'phase-section';
+
+    const head = document.createElement('div');
+    head.className = 'phase-head';
+    head.innerHTML = `<span class="phase-chip ${ph.chip}">${ph.label}</span><span class="phase-count">${phDone}/${phTotal}</span>`;
+    sec.appendChild(head);
+
+    const list = document.createElement('div');
+    list.className = 'task-list';
+
+    if (phTasks.length === 0 && (fPerson !== 'all' || fStatus !== 'all')) {
+      list.innerHTML = '<div class="empty-msg">Inga uppgifter matchar filtret.</div>';
+    } else {
+      phTasks.forEach(t => list.appendChild(makeCard(t, ph)));
+    }
+
+    if (fPerson === 'all' && fStatus === 'all') {
+      const row = document.createElement('button');
+      row.className = 'add-row';
+      row.innerHTML = '<span style="font-size:18px;line-height:1">+</span> Lägg till uppgift i denna fas';
+      row.onclick = () => openAddModal(ph.key);
+      list.appendChild(row);
+    }
+
+    sec.appendChild(list);
+    main.appendChild(sec);
+  });
+}
+
+function makeCard(task, ph) {
+  const div = document.createElement('div');
+  const phaseCls = `card-${ph.key}`;
+  const doneCls  = task.status === 'done' ? ' card-done' : '';
+  div.className = `task-card ${phaseCls}${doneCls}`;
+  div.dataset.id = task.id;
+
+  const pbCls  = { Claes:'pb-claes', Elsa:'pb-elsa', Båda:'pb-both' }[task.person] || 'pb-both';
+  const stCls  = { todo:'st-todo', progress:'st-progress', done:'st-done' }[task.status] || 'st-todo';
+  const stTxt  = { todo:'Att göra', progress:'Pågår', done:'Klart' }[task.status];
+  const sDotCls = { todo:'s-todo', progress:'s-progress', done:'s-done' }[task.status];
+
+  div.innerHTML = `
+    <div class="card-inner">
+      <button class="s-btn ${sDotCls}" title="Byt status" onclick="event.stopPropagation();cycleStatus(${task.id})">
+        <svg class="s-check" width="12" height="10" viewBox="0 0 12 10" fill="none">
+          <path d="M1 5l3.5 3.5L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="card-content">
+        <span class="task-name">${esc(task.name)}</span>
+        <div class="card-tags">
+          <span class="person-badge ${pbCls}">${esc(task.person)}</span>
+          <span class="status-tag ${stCls}">${stTxt}</span>
+        </div>
+      </div>
+      <span class="card-arrow">›</span>
+    </div>
+  `;
+
+  div.addEventListener('click', e => {
+    if (e.target.closest('.s-btn')) return;
+    openEditModal(task.id);
+  });
+  return div;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Operations ── */
+function cycleStatus(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  t.status = { todo:'progress', progress:'done', done:'todo' }[t.status];
+  onChanged(); render();
+}
+function deleteTask(id) {
+  if (!confirm('Ta bort denna uppgift?')) return;
+  tasks = tasks.filter(t => t.id !== id);
+  onChanged(); render();
+}
+
+/* ── Modals ── */
+function closeModals() {
+  document.getElementById('add-overlay').classList.remove('open');
+  document.getElementById('edit-overlay').classList.remove('open');
+  editingId = null;
+}
+function overlayClick(e, id) { if (e.target.id === id) closeModals(); }
+
+function openAddModal(phase) {
+  closeModals();
+  document.getElementById('add-name').value = '';
+  setToggle('add-person-group', 'Claes', 'person');
+  document.getElementById('add-phase').value = phase || 'prep';
+  document.getElementById('add-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('add-name').focus(), 80);
+}
+function submitAdd() {
+  const name   = document.getElementById('add-name').value.trim();
+  const person = getToggle('add-person-group');
+  const phase  = document.getElementById('add-phase').value;
+  const status = getToggle('add-status-group') || 'todo';
+  if (!name) { document.getElementById('add-name').focus(); return; }
+  tasks.push({ id: nextId++, name, person, phase, status });
+  closeModals(); onChanged(); render();
+}
+
+function openEditModal(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  editingId = id;
+  document.getElementById('edit-name').value  = t.name;
+  document.getElementById('edit-phase').value = t.phase;
+  setToggle('edit-person-group', t.person, 'person');
+  setToggle('edit-status-group', t.status, 'status');
+  document.getElementById('edit-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('edit-name').focus(), 80);
+}
+function submitEdit() {
+  const t = tasks.find(t => t.id === editingId);
+  if (!t) return;
+  t.name   = document.getElementById('edit-name').value.trim() || t.name;
+  t.person = getToggle('edit-person-group');
+  t.phase  = document.getElementById('edit-phase').value;
+  t.status = getToggle('edit-status-group');
+  closeModals(); onChanged(); render();
+}
+function deleteFromModal() {
+  if (!confirm('Ta bort denna uppgift?')) return;
+  tasks = tasks.filter(t => t.id !== editingId);
+  closeModals(); onChanged(); render();
+}
+
+/* ── Toggle group helpers ── */
+const PMAP = { Claes:'sel-claes', Elsa:'sel-elsa', Båda:'sel-both' };
+const SMAP = { todo:'sel-red', progress:'sel-amber', done:'sel-green' };
+
+function pickToggle(gid, btn, type) {
+  document.querySelectorAll(`#${gid} .toggle-btn`).forEach(b =>
+    b.classList.remove('sel','sel-green','sel-amber','sel-claes','sel-elsa','sel-both')
+  );
+  btn.classList.add((type === 'person' ? PMAP : SMAP)[btn.dataset.v] || 'sel');
+}
+function setToggle(gid, value, type) {
+  const map = type === 'person' ? PMAP : SMAP;
+  document.querySelectorAll(`#${gid} .toggle-btn`).forEach(b => {
+    b.classList.remove('sel','sel-green','sel-amber','sel-claes','sel-elsa','sel-both');
+    if (b.dataset.v === value) b.classList.add(map[value] || 'sel');
+  });
+}
+function getToggle(gid) {
+  const a = document.querySelector(`#${gid} .toggle-btn[class*="sel"]`);
+  return a ? a.dataset.v : null;
+}
+
+/* ── Filters ── */
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const f = btn.dataset.f, v = btn.dataset.v;
+    if (f === 'phase')  fPhase  = v;
+    if (f === 'person') fPerson = v;
+    if (f === 'status') fStatus = v;
+    document.querySelectorAll(`.filter-btn[data-f="${f}"]`)
+      .forEach(b => b.classList.toggle('active', b === btn));
+    render();
+  });
+});
+
+/* ── Keyboard ── */
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+document.getElementById('add-name').addEventListener('keydown', e => { if (e.key === 'Enter') submitAdd(); });
+document.getElementById('edit-name').addEventListener('keydown', e => { if (e.key === 'Enter') submitEdit(); });
+
+/* ── Countdown ── */
+(function updateCountdown() {
+  const target = new Date('2026-08-03T00:00:00');
+  const now    = new Date();
+  const days   = Math.ceil((target - now) / 86400000);
+  const el     = document.getElementById('countdown-days');
+  if (!el) return;
+  if (days > 0)      el.textContent = days;
+  else if (days === 0) el.textContent = '🎉';
+  else                 el.textContent = '✓';
+})();
+</script>
+</body>
+</html>
