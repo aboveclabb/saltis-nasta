@@ -624,6 +624,24 @@ let nextId  = 0;
 let fPhase  = 'all', fPerson = 'all', fStatus = 'all';
 let editingId = null, syncTimer = null;
 
+/* ── Sync status ── */
+const SS = {
+  loading: { cls:'sync-loading', dot:'#B4B2A9', text:'Laddar…',           spin:false },
+  pending: { cls:'sync-pending', dot:'#EF9F27', text:'Osparad…',          spin:false },
+  saving:  { cls:'sync-saving',  dot:'#EF9F27', text:'Sparar…',           spin:true  },
+  synced:  { cls:'sync-synced',  dot:'#1D9E75', text:'Synkroniserad',     spin:false },
+  offline: { cls:'sync-offline', dot:'#B4B2A9', text:'Offline — sparad lokalt', spin:false },
+  error:   { cls:'sync-error',   dot:'#E24B4A', text:'Synkfel',           spin:false },
+  local:   { cls:'sync-local',   dot:'#D3D1C7', text:'Sparad lokalt',     spin:false },
+};
+function setSyncStatus(s) {
+  const c = SS[s] || SS.local;
+  document.getElementById('sync-pill').className = 'sync-pill ' + c.cls;
+  document.getElementById('sync-dot').style.background = c.dot;
+  document.getElementById('sync-text').innerHTML = c.spin
+    ? `<span class="spin"></span> ${c.text}` : c.text;
+}
+
 /* ── Init ── */
 (async function init() {
   // Always show data immediately from local storage / defaults
@@ -642,24 +660,6 @@ let editingId = null, syncTimer = null;
   if (!ok) setSyncStatus('offline');
   render(); // re-render with any updated cloud data
 })();
-
-/* ── Sync status ── */
-const SS = {
-  loading: { cls:'sync-loading', dot:'#B4B2A9', text:'Laddar…',           spin:false },
-  pending: { cls:'sync-pending', dot:'#EF9F27', text:'Osparad…',          spin:false },
-  saving:  { cls:'sync-saving',  dot:'#EF9F27', text:'Sparar…',           spin:true  },
-  synced:  { cls:'sync-synced',  dot:'#1D9E75', text:'Synkroniserad',     spin:false },
-  offline: { cls:'sync-offline', dot:'#B4B2A9', text:'Offline — sparad lokalt', spin:false },
-  error:   { cls:'sync-error',   dot:'#E24B4A', text:'Synkfel',           spin:false },
-  local:   { cls:'sync-local',   dot:'#D3D1C7', text:'Sparad lokalt',     spin:false },
-};
-function setSyncStatus(s) {
-  const c = SS[s] || SS.local;
-  document.getElementById('sync-pill').className = 'sync-pill ' + c.cls;
-  document.getElementById('sync-dot').style.background = c.dot;
-  document.getElementById('sync-text').innerHTML = c.spin
-    ? `<span class="spin"></span> ${c.text}` : c.text;
-}
 
 /* ── Storage ── */
 function loadLocal() {
