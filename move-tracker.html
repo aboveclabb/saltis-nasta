@@ -637,7 +637,8 @@ let editingId = null, syncTimer = null;
   render(); // show local data right away
   // Then sync with cloud in background
   setSyncStatus('loading');
-  const ok = await loadCloud();
+  let ok = false;
+  try { ok = await loadCloud(); } catch(e) { console.error('loadCloud threw:', e); }
   if (!ok) setSyncStatus('offline');
   render(); // re-render with any updated cloud data
 })();
@@ -679,8 +680,11 @@ function isUnconfigured() { return !SCRIPT_URL || SCRIPT_URL.includes('YOUR_'); 
 /* ── Cloud ── */
 async function loadCloud() {
   try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 8000);
     const res  = await fetch(`${SCRIPT_URL}?action=load&secret=${encodeURIComponent(SECRET)}`,
-      { signal: AbortSignal.timeout(6000) });
+      { signal: controller.signal });
+    clearTimeout(tid);
     const data = await res.json();
     if (Array.isArray(data)) {
       if (data.length > 0) {
