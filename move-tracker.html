@@ -464,6 +464,7 @@ body {
     <button class="filter-btn active" data-f="person" data-v="all">Alla</button>
     <button class="filter-btn" data-f="person" data-v="Claes">Claes</button>
     <button class="filter-btn" data-f="person" data-v="Elsa">Elsa</button>
+    <button class="filter-btn" data-f="person" data-v="TBD">TBD</button>
     <div class="filter-divider"></div>
     <span class="filter-label">Status</span>
     <button class="filter-btn active" data-f="status" data-v="all">Alla</button>
@@ -692,10 +693,44 @@ function setSyncStatus(s) {
     ? `<span class="spin"></span> ${c.text}` : c.text;
 }
 
+/* ── Seed tasks (added 2026-06-17, run once to merge) ── */
+const SEED_TASKS = [
+  { name:'Gästrum: rensa garderob + stringlådor',                   person:'TBD', phase:'prep', status:'todo' },
+  { name:'Gästrum: montera ner string',                             person:'TBD', phase:'prep', status:'todo' },
+  { name:'Gästrum: lägg saker ner i låda',                         person:'TBD', phase:'prep', status:'todo' },
+  { name:'Skogarderob: rensa',                                      person:'TBD', phase:'prep', status:'todo' },
+  { name:'Skogarderob: sortera höst/vinterskor + vinterkläder',     person:'TBD', phase:'prep', status:'todo' },
+  { name:'Groventre: rensa lådor och garderob',                    person:'TBD', phase:'prep', status:'todo' },
+  { name:'Tvättstuga: rensa',                                       person:'TBD', phase:'prep', status:'todo' },
+  { name:'Tvättstuga: sortera ut i förrådet',                       person:'TBD', phase:'prep', status:'todo' },
+  { name:'Barnens garderob: rensa ut för små saker i egen låda',   person:'TBD', phase:'prep', status:'todo' },
+  { name:'Barnens garderob: rensa skräp',                          person:'TBD', phase:'prep', status:'todo' },
+  { name:'Badrum nere: rensa kommod',                              person:'TBD', phase:'prep', status:'todo' },
+  { name:'Kök: rensa skåp',                                        person:'TBD', phase:'prep', status:'todo' },
+  { name:'Allrum: montera ner hylla',                              person:'TBD', phase:'prep', status:'todo' },
+  { name:'Olivias rum: rensa bland pyssel',                        person:'TBD', phase:'prep', status:'todo' },
+  { name:'Wall in closet: rensa vita lådor',                       person:'TBD', phase:'prep', status:'todo' },
+  { name:'Badrum uppe: rensa kommod',                              person:'TBD', phase:'prep', status:'todo' },
+  { name:'Töm Green storage',                                      person:'TBD', phase:'prep', status:'todo' },
+  { name:'Sälj: Dagbädd',                                          person:'TBD', phase:'prep', status:'todo' },
+  { name:'Sälj: Resesäng',                                         person:'TBD', phase:'prep', status:'todo' },
+  { name:'Sälj: Dockskåp',                                         person:'TBD', phase:'prep', status:'todo' },
+  { name:'Sälj: Garderob Olivias',                                 person:'TBD', phase:'prep', status:'todo' },
+];
+function mergeSeedTasks() {
+  let added = false;
+  SEED_TASKS.forEach(t => {
+    const exists = tasks.some(x => x.name.toLowerCase() === t.name.toLowerCase());
+    if (!exists) { tasks.push({ id: nextId++, ...t }); added = true; }
+  });
+  if (added) onChanged();
+}
+
 /* ── Init ── */
 (async function init() {
   // Always show data immediately from local storage / defaults
   loadLocal() || loadDefaults();
+  mergeSeedTasks();
   if (isUnconfigured()) {
     document.getElementById('setup-banner').style.display = 'flex';
     setSyncStatus('local');
@@ -707,6 +742,7 @@ function setSyncStatus(s) {
   setSyncStatus('loading');
   let ok = false;
   try { ok = await loadCloud(); } catch(e) { console.error('loadCloud threw:', e); }
+  mergeSeedTasks();
   if (!ok) setSyncStatus('offline');
   render(); // re-render with any updated cloud data
 })();
