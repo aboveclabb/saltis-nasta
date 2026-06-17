@@ -197,6 +197,7 @@ body {
 .pb-claes { background: rgba(255,255,255,0.22); color: white; }
 .pb-elsa  { background: rgba(0,0,0,0.15); color: rgba(255,255,255,0.9); }
 .pb-both  { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.85); }
+.pb-tbd   { background: rgba(0,0,0,0.18); color: rgba(255,255,255,0.7); }
 
 .status-tag {
   font-size: 11px; padding: 3px 9px; border-radius: 20px; white-space: nowrap; font-weight: 700;
@@ -319,6 +320,36 @@ body {
 .toggle-btn.sel-elsa   { background: #FBEAF0;  color: #993556; border-color: #F4C0D1; font-weight: 700; }
 .toggle-btn.sel-both   { background: #F1EFE8;  color: #444441; border-color: #D3D1C7; font-weight: 700; }
 
+/* ── Segmented control ── */
+.seg-control {
+  position: relative; display: flex;
+  background: #F1EFE8; border-radius: 12px; padding: 3px;
+}
+.seg-thumb {
+  position: absolute; top: 3px; height: calc(100% - 6px);
+  border-radius: 9px; background: white;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.14);
+  transition: left 0.18s cubic-bezier(.4,0,.2,1), width 0.18s cubic-bezier(.4,0,.2,1), background 0.2s;
+  pointer-events: none; z-index: 0;
+}
+.seg-thumb-todo     { background: #E8433A; }
+.seg-thumb-progress { background: #EF9F27; }
+.seg-thumb-done     { background: #1D9E75; }
+.seg-btn {
+  flex: 1; border: none; background: transparent;
+  padding: 10px 4px; font-size: 13px; font-weight: 600; color: #888780;
+  cursor: pointer; border-radius: 9px;
+  position: relative; z-index: 1;
+  transition: color 0.15s; min-height: 42px;
+  -webkit-tap-highlight-color: transparent;
+}
+.seg-btn:active { opacity: 0.75; }
+.seg-control[data-type="person"] .seg-btn[data-v="Claes"].active { color: #185FA5; }
+.seg-control[data-type="person"] .seg-btn[data-v="Elsa"].active  { color: #993556; }
+.seg-control[data-type="person"] .seg-btn[data-v="Båda"].active  { color: #444441; }
+.seg-control[data-type="person"] .seg-btn[data-v="TBD"].active   { color: #5F5E5A; }
+.seg-control[data-type="status"] .seg-btn.active { color: white; }
+
 /* ── Buttons ── */
 .btn {
   padding: 13px 20px; border-radius: 10px; font-size: 15px; font-weight: 600;
@@ -363,7 +394,7 @@ body {
 <!-- Countdown banner -->
 <div class="countdown-banner">
   <div class="countdown-number" id="countdown-days">—</div>
-  <div class="countdown-label">dagar kvar<strong>till inflytt 3 aug</strong></div>
+  <div class="countdown-label">dagar kvar<strong>till inflytt 28 jul</strong></div>
 </div>
 
 <!-- Setup banner -->
@@ -453,6 +484,7 @@ body {
           <button class="toggle-btn sel-claes sel" data-v="Claes" onclick="pickToggle('add-person-group',this,'person')">Claes</button>
           <button class="toggle-btn" data-v="Elsa"  onclick="pickToggle('add-person-group',this,'person')">Elsa</button>
           <button class="toggle-btn" data-v="Båda"  onclick="pickToggle('add-person-group',this,'person')">Båda</button>
+          <button class="toggle-btn" data-v="TBD"   onclick="pickToggle('add-person-group',this,'person')">TBD</button>
         </div>
       </div>
       <div>
@@ -498,10 +530,12 @@ body {
       </div>
       <div>
         <label class="field-label">Tilldelad</label>
-        <div class="toggle-group" id="edit-person-group">
-          <button class="toggle-btn" data-v="Claes" onclick="pickToggle('edit-person-group',this,'person')">Claes</button>
-          <button class="toggle-btn" data-v="Elsa"  onclick="pickToggle('edit-person-group',this,'person')">Elsa</button>
-          <button class="toggle-btn" data-v="Båda"  onclick="pickToggle('edit-person-group',this,'person')">Båda</button>
+        <div class="seg-control" id="edit-person-seg" data-type="person">
+          <div class="seg-thumb"></div>
+          <button class="seg-btn" data-v="Claes" onclick="pickSeg('edit-person-seg',this)">Claes</button>
+          <button class="seg-btn" data-v="Elsa"  onclick="pickSeg('edit-person-seg',this)">Elsa</button>
+          <button class="seg-btn" data-v="Båda"  onclick="pickSeg('edit-person-seg',this)">Båda</button>
+          <button class="seg-btn" data-v="TBD"   onclick="pickSeg('edit-person-seg',this)">TBD</button>
         </div>
       </div>
       <div>
@@ -516,10 +550,11 @@ body {
       </div>
       <div>
         <label class="field-label">Status</label>
-        <div class="toggle-group" id="edit-status-group">
-          <button class="toggle-btn" data-v="todo"     onclick="pickToggle('edit-status-group',this,'status')">Att göra</button>
-          <button class="toggle-btn" data-v="progress" onclick="pickToggle('edit-status-group',this,'status')">Pågår</button>
-          <button class="toggle-btn" data-v="done"     onclick="pickToggle('edit-status-group',this,'status')">Klart</button>
+        <div class="seg-control" id="edit-status-seg" data-type="status">
+          <div class="seg-thumb seg-thumb-todo"></div>
+          <button class="seg-btn" data-v="todo"     onclick="pickSeg('edit-status-seg',this)">Att göra</button>
+          <button class="seg-btn" data-v="progress" onclick="pickSeg('edit-status-seg',this)">Pågår</button>
+          <button class="seg-btn" data-v="done"     onclick="pickSeg('edit-status-seg',this)">Klart</button>
         </div>
       </div>
     </div>
@@ -780,7 +815,7 @@ function makeCard(task, ph) {
   div.className = `task-card ${phaseCls}${doneCls}`;
   div.dataset.id = task.id;
 
-  const pbCls  = { Claes:'pb-claes', Elsa:'pb-elsa', Båda:'pb-both' }[task.person] || 'pb-both';
+  const pbCls  = { Claes:'pb-claes', Elsa:'pb-elsa', Båda:'pb-both', TBD:'pb-tbd' }[task.person] || 'pb-both';
   const stCls  = { todo:'st-todo', progress:'st-progress', done:'st-done' }[task.status] || 'st-todo';
   const stTxt  = { todo:'Att göra', progress:'Pågår', done:'Klart' }[task.status];
   const sDotCls = { todo:'s-todo', progress:'s-progress', done:'s-done' }[task.status];
@@ -859,18 +894,21 @@ function openEditModal(id) {
   editingId = id;
   document.getElementById('edit-name').value  = t.name;
   document.getElementById('edit-phase').value = t.phase;
-  setToggle('edit-person-group', t.person, 'person');
-  setToggle('edit-status-group', t.status, 'status');
+  setSeg('edit-person-seg', t.person);
+  setSeg('edit-status-seg', t.status);
   document.getElementById('edit-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('edit-name').focus(), 80);
+  setTimeout(() => {
+    document.getElementById('edit-name').focus();
+    document.querySelectorAll('#edit-overlay .seg-control').forEach(updateThumb);
+  }, 80);
 }
 function submitEdit() {
   const t = tasks.find(t => t.id === editingId);
   if (!t) return;
   t.name   = document.getElementById('edit-name').value.trim() || t.name;
-  t.person = getToggle('edit-person-group');
+  t.person = getSeg('edit-person-seg') || t.person;
   t.phase  = document.getElementById('edit-phase').value;
-  t.status = getToggle('edit-status-group');
+  t.status = getSeg('edit-status-seg') || t.status;
   closeModals(); onChanged(); render();
 }
 function deleteFromModal() {
@@ -880,25 +918,54 @@ function deleteFromModal() {
 }
 
 /* ── Toggle group helpers ── */
-const PMAP = { Claes:'sel-claes', Elsa:'sel-elsa', Båda:'sel-both' };
+const PMAP = { Claes:'sel-claes', Elsa:'sel-elsa', Båda:'sel-both', TBD:'sel' };
 const SMAP = { todo:'sel-red', progress:'sel-amber', done:'sel-green' };
 
 function pickToggle(gid, btn, type) {
   document.querySelectorAll(`#${gid} .toggle-btn`).forEach(b =>
-    b.classList.remove('sel','sel-green','sel-amber','sel-claes','sel-elsa','sel-both')
+    b.classList.remove('sel','sel-red','sel-green','sel-amber','sel-claes','sel-elsa','sel-both')
   );
   btn.classList.add((type === 'person' ? PMAP : SMAP)[btn.dataset.v] || 'sel');
 }
 function setToggle(gid, value, type) {
   const map = type === 'person' ? PMAP : SMAP;
   document.querySelectorAll(`#${gid} .toggle-btn`).forEach(b => {
-    b.classList.remove('sel','sel-green','sel-amber','sel-claes','sel-elsa','sel-both');
+    b.classList.remove('sel','sel-red','sel-green','sel-amber','sel-claes','sel-elsa','sel-both');
     if (b.dataset.v === value) b.classList.add(map[value] || 'sel');
   });
 }
 function getToggle(gid) {
   const a = document.querySelector(`#${gid} .toggle-btn[class*="sel"]`);
   return a ? a.dataset.v : null;
+}
+
+/* ── Segmented control helpers ── */
+function pickSeg(gid, btn) {
+  const group = document.getElementById(gid);
+  group.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updateThumb(group);
+}
+function setSeg(gid, value) {
+  const group = document.getElementById(gid);
+  group.querySelectorAll('.seg-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.v === value)
+  );
+  updateThumb(group);
+}
+function getSeg(gid) {
+  const btn = document.querySelector(`#${gid} .seg-btn.active`);
+  return btn ? btn.dataset.v : null;
+}
+function updateThumb(group) {
+  const active = group.querySelector('.seg-btn.active');
+  const thumb  = group.querySelector('.seg-thumb');
+  if (!active || !thumb) return;
+  thumb.style.left  = active.offsetLeft + 'px';
+  thumb.style.width = active.offsetWidth + 'px';
+  if (group.dataset.type === 'status') {
+    thumb.className = 'seg-thumb seg-thumb-' + (active.dataset.v || '');
+  }
 }
 
 /* ── Filters ── */
@@ -916,6 +983,11 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 
 /* ── Keyboard ── */
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+
+/* ── Resize: reposition seg thumbs ── */
+window.addEventListener('resize', () => {
+  document.querySelectorAll('.seg-control').forEach(updateThumb);
+});
 document.getElementById('add-name').addEventListener('keydown', e => { if (e.key === 'Enter') submitAdd(); });
 document.getElementById('edit-name').addEventListener('keydown', e => { if (e.key === 'Enter') submitEdit(); });
 
