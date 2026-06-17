@@ -793,7 +793,9 @@ function render() {
 
   PHASES.forEach(ph => {
     if (fPhase !== 'all' && fPhase !== ph.key) return;
-    const phTasks = visible.filter(t => t.phase === ph.key);
+    const statusOrder = { todo: 0, progress: 1, done: 2 };
+    const phTasks = visible.filter(t => t.phase === ph.key)
+      .sort((a, b) => (statusOrder[a.status] ?? 1) - (statusOrder[b.status] ?? 1));
     const phTotal = tasks.filter(t => t.phase === ph.key).length;
     const phDone  = tasks.filter(t => t.phase === ph.key && t.status === 'done').length;
 
