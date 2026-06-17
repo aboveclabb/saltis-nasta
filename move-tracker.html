@@ -156,7 +156,6 @@ body {
 /* Done cards: faded */
 .card-done { opacity: 0.45; }
 
-/* Left bar hidden in full-bleed mode */
 .card-bar { display: none; }
 
 .card-inner {
@@ -386,6 +385,15 @@ body {
   .modal::before { display: none; }
 
   .task-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.18); transform: translateY(-1px); }
+
+  /* ── Kanban column layout ── */
+  #main {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+    align-items: start;
+  }
+  .phase-section { margin-bottom: 0; }
 }
 </style>
 </head>
